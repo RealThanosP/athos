@@ -22,6 +22,8 @@ package() {
     install -Dm755 athos-show-logo "$pkgdir/usr/bin/athos-show-logo"
     install -Dm755 athos-show-done "$pkgdir/usr/bin/athos-show-done"
     install -Dm755 athos-launch-webapp "$pkgdir/usr/bin/athos-launch-webapp"
+    install -Dm755 install.sh "$pkgdir/usr/bin/athos-install"
+    install -Dm755 uninstall.sh "$pkgdir/usr/bin/athos-uninstall"
     
     install -Dm644 logo.txt "$pkgdir/usr/share/athos/logo.txt"
     install -Dm644 icon.png "$pkgdir/usr/share/icons/hicolor/256x256/apps/athos.png"
@@ -40,4 +42,18 @@ Type=Application
 Categories=System;PackageManager;
 Keywords=install;package;aur;webapp;
 EOF
+}
+
+post_install() {
+    echo ""
+    echo "========================================"
+    echo "  athos installed successfully!"
+    echo "========================================"
+    echo ""
+    echo "Run the following command to complete setup:"
+    echo ""
+    echo "  athos-install"
+    echo ""
+    echo "This will create desktop entry and add PATH to your shell."
+    echo ""
 }
