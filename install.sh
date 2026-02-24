@@ -132,8 +132,6 @@ main() {
 	echo "Run with: athos"
 	echo "Or find 'athos' in your app launcher"
 	echo
-	echo "NOTE: Please restart your terminal or run:"
-	echo "  source ~/.bashrc  # or ~/.zshrc or source config.fish"
 }
 
 main "$@"
