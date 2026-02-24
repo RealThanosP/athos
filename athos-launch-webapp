@@ -1,0 +1,31 @@
+#!/usr/bin/env bash
+
+set -e
+
+if [[ -z "$1" ]]; then
+    echo "Usage: athos-launch-webapp <url>"
+    exit 1
+fi
+
+url="$1"
+
+if [[ ! "$url" =~ ^[a-zA-Z][a-zA-Z0-9+.-]*: ]]; then
+    url="https://$url"
+fi
+
+if command -v firefox &>/dev/null; then
+    exec firefox --new-window "$url"
+elif command -v google-chrome &>/dev/null; then
+    exec google-chrome --app="$url"
+elif command -v chromium &>/dev/null; then
+    exec chromium --app="$url"
+elif command -v brave &>/dev/null; then
+    exec brave --app="$url"
+elif command -v microsoft-edge &>/dev/null; then
+    exec microsoft-edge --app="$url"
+elif command -v xdg-open &>/dev/null; then
+    exec xdg-open "$url"
+else
+    echo "Error: No supported browser found"
+    exit 1
+fi

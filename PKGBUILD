@@ -21,9 +21,11 @@ package() {
     install -Dm755 athos-webapp-remove "$pkgdir/usr/bin/athos-webapp-remove"
     install -Dm755 athos-show-logo "$pkgdir/usr/bin/athos-show-logo"
     install -Dm755 athos-show-done "$pkgdir/usr/bin/athos-show-done"
+    install -Dm755 athos-launch-webapp "$pkgdir/usr/bin/athos-launch-webapp"
     
     install -Dm644 logo.txt "$pkgdir/usr/share/athos/logo.txt"
     install -Dm644 icon.png "$pkgdir/usr/share/icons/hicolor/256x256/apps/athos.png"
+    install -Dm644 icon.png "$pkgdir/usr/share/pixmaps/athos.png"
     
     mkdir -p "$pkgdir/usr/share/applications"
     cat > "$pkgdir/usr/share/applications/athos.desktop" <<EOF
@@ -32,7 +34,7 @@ Version=1.0
 Name=athos
 Comment=Package and Web App Installer, based on Omarchy ()
 Exec=/usr/bin/athos
-Icon=athos
+Icon=/usr/share/pixmaps/athos.png
 Terminal=true
 Type=Application
 Categories=System;PackageManager;

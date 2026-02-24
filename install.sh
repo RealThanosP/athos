@@ -54,6 +54,11 @@ install_files() {
 	cp "$SCRIPT_DIR/athos" "$INSTALL_DIR/athos"
 	chmod +x "$INSTALL_DIR/athos"
 
+	if [[ -f "$SCRIPT_DIR/athos-launch-webapp" ]]; then
+		cp "$SCRIPT_DIR/athos-launch-webapp" "$INSTALL_DIR/athos-launch-webapp"
+		chmod +x "$INSTALL_DIR/athos-launch-webapp"
+	fi
+
 	if [[ -f "$SCRIPT_DIR/logo.txt" ]]; then
 		cp "$SCRIPT_DIR/logo.txt" "$CONFIG_DIR/logo.txt"
 		cp "$SCRIPT_DIR/logo.txt" "$INSTALL_DIR/logo.txt"
@@ -83,7 +88,7 @@ Version=1.0
 Name=athos
 Comment=Package and Web App Installer
 Exec=$INSTALL_DIR/athos
-Icon=athos
+Icon=$HOME/.local/share/icons/hicolor/256x256/apps/athos.png
 Terminal=true
 Type=Application
 Categories=System;PackageManager;
