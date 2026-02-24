@@ -2,6 +2,8 @@
 
 A Text User Interface (TUI) for installing packages and creating web application launchers on Arch Linux.
 
+Based on the omarchy menu for installing webapps and packages.
+
 ## Features
 
 - Install official Arch packages via `pacman`
