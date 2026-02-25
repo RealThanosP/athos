@@ -73,7 +73,6 @@ main() {
 		sudo rm -f /usr/bin/athos-pkg-install
 		sudo rm -f /usr/bin/athos-pkg-remove
 		sudo rm -f /usr/bin/athos-pkg-aur-install
-<<<<<<< HEAD
 		sudo rm -f /usr/bin/athos-pkg-aur-remove
 		sudo rm -f /usr/bin/athos-webapp-install
 		sudo rm -f /usr/bin/athos-webapp-remove
@@ -81,16 +80,6 @@ main() {
 		sudo rm -f /usr/bin/athos-utils.sh
 		sudo rm -f /usr/share/athos/logo.txt
 		sudo rm -f /usr/share/icons/hicolor/256x256/apps/athos.png
-=======
-		sudo rm -f /usr/bin/athos-webapp-install
-		sudo rm -f /usr/bin/athos-webapp-remove
-		sudo rm -f /usr/bin/athos-show-logo
-		sudo rm -f /usr/bin/athos-show-done
-		sudo rm -f /usr/bin/athos-launch-webapp
-		sudo rm -f /usr/share/athos/logo.txt
-		sudo rm -f /usr/share/icons/hicolor/256x256/apps/athos.png
-		sudo rm -f /usr/share/pixmaps/athos.png
->>>>>>> refs/remotes/origin/main
 		sudo rm -f /usr/share/applications/athos.desktop
 		sudo rmdir /usr/share/athos 2>/dev/null || true
 		log_info "System-wide files removed"
