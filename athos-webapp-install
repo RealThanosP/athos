@@ -1,6 +1,5 @@
 #!/usr/bin/env bash
 
-set -e
 
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 source "$SCRIPT_DIR/athos-utils.sh"
@@ -21,14 +20,14 @@ app_name=$(gum input --prompt "Name> " --placeholder "My favorite web app")
 exit_code=$?
 
 if ((exit_code != 0)) || [[ -z $app_name ]]; then
-    exit 0
+    exit 1
 fi
 
 app_url=$(gum input --prompt "URL> " --placeholder "https://example.com")
 exit_code=$?
 
 if ((exit_code != 0)) || [[ -z $app_url ]]; then
-    exit 0
+    exit 1
 fi
 
 if [[ ! $app_url =~ ^[a-zA-Z][a-zA-Z0-9+.-]*: ]]; then
@@ -42,7 +41,7 @@ if ! curl -fsSL -o "$icon_path" "$favicon_url" || [[ ! -s "$icon_path" ]]; then
     icon_ref=$(gum input --prompt "Icon URL> " --placeholder "Could not fetch favicon automatically. Enter PNG icon URL")
     exit_code=$?
     if ((exit_code != 0)) || [[ -z $icon_ref ]]; then
-        exit 0
+        exit 1
     fi
     if ! curl -fsSL -o "$icon_path" "$icon_ref" || [[ ! -s "$icon_path" ]]; then
         echo "Error: Failed to download icon"
@@ -72,4 +71,3 @@ chmod +x "$desktop_file"
 echo
 echo -e "You can now find $app_name using the app launcher"
 show_done
-trap - SIGINT

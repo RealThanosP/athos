@@ -1,6 +1,5 @@
 #!/usr/bin/env bash
 
-set -e
 
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 source "$SCRIPT_DIR/athos-utils.sh"
@@ -26,7 +25,7 @@ fi
 selected=$(echo "$apps" | fzf --multi --preview "cat $app_dir/{1}.desktop" --preview-label='ctrl-q: quit, tab: multi-select' --bind 'ctrl-q:abort' --color 'pointer:green,marker:green')
 
 if [[ -z "$selected" ]]; then
-    exit 0
+    exit 1
 fi
 
 while IFS= read -r app; do

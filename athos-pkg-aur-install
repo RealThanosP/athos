@@ -1,6 +1,5 @@
 #!/usr/bin/env bash
 
-set -e
 
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 source "$SCRIPT_DIR/athos-utils.sh"
@@ -30,7 +29,7 @@ fzf_args=(
 pkg_names=$(yay -Slqa | fzf "${fzf_args[@]}")
 
 if [[ -z "$pkg_names" ]]; then
-  exit 0
+  exit 1
 fi
 
 sudo -v

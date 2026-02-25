@@ -1,6 +1,5 @@
 #!/usr/bin/env bash
 
-set -e
 
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 source "$SCRIPT_DIR/athos-utils.sh"
@@ -25,22 +24,22 @@ show_main_menu() {
 
   case "$choice" in
     *"Install Arch Package")
-      athos-pkg-install
+      athos-pkg-install || true
       ;;
     *"Install AUR Package")
-      athos-pkg-aur-install
+      athos-pkg-aur-install || true
       ;;
     *"Install Web App")
-      athos-webapp-install
+      athos-webapp-install || true
       ;;
     *"Remove Arch Package")
-      athos-pkg-remove
+      athos-pkg-remove || true
       ;;
     *"Remove AUR Package")
-      athos-pkg-aur-remove
+      athos-pkg-aur-remove || true
       ;;
     *"Remove Web App")
-      athos-webapp-remove
+      athos-webapp-remove || true
       ;;
     *"Quit"|"")
       show_logo
