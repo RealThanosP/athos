@@ -1,0 +1,34 @@
+#!/usr/bin/env bash
+
+set -e
+
+SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+source "$SCRIPT_DIR/athos-utils.sh"
+
+check_deps "gum" "fzf" "yay"
+
+show_logo
+echo "Removing AUR packages..."
+echo "Press Ctrl+Q to return to menu"
+echo
+
+fzf_args=(
+  --multi
+  --preview 'yay -Siia {1}'
+  --preview-label='ctrl-q: quit, tab: multi-select'
+  --preview-label-pos='bottom'
+  --preview-window 'down:65%:wrap'
+  --bind 'ctrl-q:abort'
+  --color 'pointer:green,marker:green'
+)
+
+pkg_names=$(yay -Qqma | fzf "${fzf_args[@]}")
+
+if [[ -z "$pkg_names" ]]; then
+  exit 0
+fi
+
+echo "$pkg_names" | tr '
+' ' ' | xargs yay -Rcs --noconfirm
+
+show_done
