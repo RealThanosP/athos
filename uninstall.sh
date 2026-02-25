@@ -16,6 +16,11 @@ log_warn() { echo -e "${YELLOW}[WARN]${NC} $1"; }
 log_error() { echo -e "${RED}[ERROR]${NC} $1"; }
 
 uninstall_files() {
+	log_info "Removing build artifacts..."
+	rm -f athos-*.pkg.tar.zst
+	rm -rf pkg
+	rm -rf src
+
 	log_info "Removing athos files..."
 
 	rm -f "$INSTALL_DIR/athos"
@@ -65,6 +70,7 @@ main() {
 	echo "  - Desktop entry and icon"
 	echo "  - Web apps created by athos"
 	echo "  - Shell configuration entries"
+	echo "  - Build artifacts (.tar.zst, pkg/, src/)"
 	echo
 
 	if [[ $1 == "--system" ]] || [[ $1 == "-s" ]]; then
