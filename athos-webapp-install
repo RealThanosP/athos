@@ -1,87 +1,75 @@
-#!/bin/bash
+#!/usr/bin/env bash
 
-ICON_DIR="$HOME/.local/share/applications/icons"
+set -e
 
-if (( $# < 3 )); then
-  echo -e "\e[32mLet's create a new web app you can start with the app launcher.\n\e[0m"
-  APP_NAME=$(gum input --prompt "Name> " --placeholder "My favorite web app")
-  APP_URL=$(gum input --prompt "URL> " --placeholder "https://example.com")
-  if [[ ! $APP_URL =~ ^[a-zA-Z][a-zA-Z0-9+.-]*: ]]; then
-    APP_URL="https://$APP_URL"
-  fi
+SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+source "$SCRIPT_DIR/athos-utils.sh"
 
-  # Try to fetch favicon automatically first.
-  FAVICON_URL="https://www.google.com/s2/favicons?domain=${APP_URL}&sz=128"
-  mkdir -p "$ICON_DIR"
-  if curl -fsSL -o "$ICON_DIR/$APP_NAME.png" "$FAVICON_URL" && [[ -s $ICON_DIR/$APP_NAME.png ]]; then
-    ICON_REF="$APP_NAME.png"
-  else
-    ICON_REF=$(gum input --prompt "Icon URL> " --placeholder "Could not fetch favicon automatically. Enter PNG icon URL (see https://dashboardicons.com)")
-  fi
+check_deps "gum" "curl"
 
-  CUSTOM_EXEC=""
-  MIME_TYPES=""
-  INTERACTIVE_MODE=true
-else
-  APP_NAME="$1"
-  APP_URL="$2"
-  if [[ ! $APP_URL =~ ^[a-zA-Z][a-zA-Z0-9+.-]*: ]]; then
-    APP_URL="https://$APP_URL"
-  fi
-  ICON_REF="$3"
-  CUSTOM_EXEC="$4" # Optional custom exec command
-  MIME_TYPES="$5"  # Optional mime types
-  INTERACTIVE_MODE=false
+show_logo
+echo "Creating Web App..."
+echo "Press Ctrl+C to exit"
+echo
+
+icon_dir="$HOME/.local/share/athos/icons"
+app_dir="$HOME/.local/share/applications"
+mkdir -p "$icon_dir"
+mkdir -p "$app_dir"
+
+app_name=$(gum input --prompt "Name> " --placeholder "My favorite web app")
+exit_code=$?
+
+if ((exit_code != 0)) || [[ -z $app_name ]]; then
+    exit 0
 fi
 
-# Ensure valid execution
-if [[ -z $APP_NAME || -z $APP_URL ]]; then
-  echo "You must set app name and app URL!"
-  exit 1
+app_url=$(gum input --prompt "URL> " --placeholder "https://example.com")
+exit_code=$?
+
+if ((exit_code != 0)) || [[ -z $app_url ]]; then
+    exit 0
 fi
 
-# Resolve icon from URL or from a local icon name.
-mkdir -p "$ICON_DIR"
-
-if [[ -z $ICON_REF ]]; then
-  ICON_REF="https://www.google.com/s2/favicons?domain=${APP_URL}&sz=128"
+if [[ ! $app_url =~ ^[a-zA-Z][a-zA-Z0-9+.-]*: ]]; then
+    app_url="https://$app_url"
 fi
 
-if [[ $ICON_REF =~ ^https?:// ]]; then
-  ICON_PATH="$ICON_DIR/$APP_NAME.png"
-  if ! curl -fsSL -o "$ICON_PATH" "$ICON_REF" || [[ ! -s $ICON_PATH ]]; then
-    echo "Error: Failed to download icon."
-    exit 1
-  fi
-else
-  ICON_PATH="$ICON_DIR/$ICON_REF"
+favicon_url="https://www.google.com/s2/favicons?domain=${app_url}&sz=128"
+icon_path="$icon_dir/$app_name.png"
+
+if ! curl -fsSL -o "$icon_path" "$favicon_url" || [[ ! -s "$icon_path" ]]; then
+    icon_ref=$(gum input --prompt "Icon URL> " --placeholder "Could not fetch favicon automatically. Enter PNG icon URL")
+    exit_code=$?
+    if ((exit_code != 0)) || [[ -z $icon_ref ]]; then
+        exit 0
+    fi
+    if ! curl -fsSL -o "$icon_path" "$icon_ref" || [[ ! -s "$icon_path" ]]; then
+        echo "Error: Failed to download icon"
+        exit 1
+    fi
 fi
 
-# Use custom exec if provided, otherwise default behavior
-EXEC_COMMAND="${CUSTOM_EXEC:-athos-launch-webapp $APP_URL}"
+exec_command="athos-launch-webapp $app_url"
+desktop_file="$app_dir/$app_name.desktop"
 
-# Create application .desktop file
-DESKTOP_FILE="$HOME/.local/share/applications/$APP_NAME.desktop"
-
-cat >"$DESKTOP_FILE" <<EOF
+cat >"$desktop_file" <<EOF
 [Desktop Entry]
 Version=1.0
-Name=$APP_NAME
-Comment=$APP_NAME
-Exec=$EXEC_COMMAND
+Name=$app_name
+Comment=$app_name
+Exec=$exec_command
 Terminal=false
 Type=Application
-Icon=$ICON_PATH
+Icon=$icon_path
 StartupNotify=true
+Categories=System;Web;
+Keywords=webapp;
 EOF
 
-# Add mime types if provided
-if [[ -n $MIME_TYPES ]]; then
-  echo "MimeType=$MIME_TYPES" >>"$DESKTOP_FILE"
-fi
+chmod +x "$desktop_file"
 
-chmod +x "$DESKTOP_FILE"
-
-if [[ $INTERACTIVE_MODE == "true" ]]; then
-  echo -e "You can now find $APP_NAME using the app launcher (SUPER + SPACE)\n"
-fi
+echo
+echo -e "You can now find $app_name using the app launcher"
+show_done
+trap - SIGINT

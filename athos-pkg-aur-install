@@ -1,9 +1,21 @@
-#!/bin/bash
+#!/usr/bin/env bash
+
+set -e
+
+SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+source "$SCRIPT_DIR/athos-utils.sh"
+
+check_deps "gum" "fzf" "yay"
+
+show_logo
+echo "Installing AUR packages..."
+echo "Press Ctrl+Q to return to menu"
+echo
 
 fzf_args=(
   --multi
   --preview 'yay -Siia {1}'
-  --preview-label='alt-p: toggle description, alt-b/B: toggle PKGBUILD, alt-j/k: scroll, tab: multi-select'
+  --preview-label='ctrl-q: quit, alt-p: toggle description, alt-b/B: toggle PKGBUILD, alt-j/k: scroll, tab: multi-select'
   --preview-label-pos='bottom'
   --preview-window 'down:65%:wrap'
   --bind 'alt-p:toggle-preview'
@@ -11,14 +23,18 @@ fzf_args=(
   --bind 'alt-k:preview-up,alt-j:preview-down'
   --bind 'alt-b:change-preview:yay -Gpa {1} | tail -n +5'
   --bind 'alt-B:change-preview:yay -Siia {1}'
+  --bind 'ctrl-q:abort'
   --color 'pointer:green,marker:green'
 )
 
 pkg_names=$(yay -Slqa | fzf "${fzf_args[@]}")
 
-if [[ -n $pkg_names ]]; then
-  sudo -v
-  echo "$pkg_names" | sed 's/^/aur\//' | tr '\n' ' ' | xargs yay -S --noconfirm
-  sudo updatedb
-  athos-show-done
+if [[ -z "$pkg_names" ]]; then
+  exit 0
 fi
+
+sudo -v
+echo "$pkg_names" | sed 's/^/aur\//' | tr '\n' ' ' | xargs yay -S --noconfirm
+sudo updatedb
+
+show_done

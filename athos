@@ -3,296 +3,9 @@
 set -e
 
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
-LOGO_FILE="${SCRIPT_DIR}/logo.txt"
+source "$SCRIPT_DIR/athos-utils.sh"
 
-deps=("gum" "fzf")
-missing=()
-
-for dep in "${deps[@]}"; do
-  if ! command -v "$dep" &>/dev/null; then
-    missing+=("$dep")
-  fi
-done
-
-if (( ${#missing[@]} > 0 )); then
-  echo "Missing dependencies: ${missing[*]}"
-  echo "Install with: brew install ${missing[*]} # or your distro's package manager"
-  exit 1
-fi
-
-show_logo() {
-  clear
-  echo -e "\033[32m"
-  if [[ -f "$LOGO_FILE" ]]; then
-    cat "$LOGO_FILE"
-  else
-    echo "athos Installer"
-  fi
-  echo -e "\033[0m"
-  echo
-}
-
-show_done() {
-  echo
-  gum spin --spinner "globe" --title "Done! Press any key to close..." -- bash -c 'read -n 1 -s'
-}
-
-install_arch_pkg() {
-  show_logo
-  echo "Installing Arch packages..."
-  echo
-  echo "Press Ctrl+Q to return to menu"
-  echo
-  
-  local fzf_args=(
-    --multi
-    --preview 'pacman -Sii {1}'
-    --preview-label='ctrl-q: quit, alt-p: toggle description, alt-j/k: scroll, tab: multi-select'
-    --preview-label-pos='bottom'
-    --preview-window 'down:65%:wrap'
-    --bind 'alt-p:toggle-preview'
-    --bind 'alt-d:preview-half-page-down,alt-u:preview-half-page-up'
-    --bind 'alt-k:preview-up,alt-j:preview-down'
-    --bind 'ctrl-q:abort'
-    --color 'pointer:green,marker:green'
-  )
-
-  local pkg_names
-  set +e
-  pkg_names=$(pacman -Slq | fzf "${fzf_args[@]}")
-  local fzf_exit=$?
-  set -e
-
-  if (( fzf_exit != 0 )) || [[ -z $pkg_names ]]; then
-    return
-  fi
-
-  echo "$pkg_names" | tr '\n' ' ' | xargs sudo pacman -S --noconfirm
-  show_done
-}
-
-remove_arch_pkg() {
-  show_logo
-  echo "Removing Arch packages..."
-  echo
-  echo "Press Ctrl+Q to return to menu"
-  echo
-
-  local fzf_args=(
-    --multi
-    --preview 'pacman -Sii {1}'
-    --preview-label='ctrl-q: quit, tab: multi-select'
-    --preview-label-pos='bottom'
-    --preview-window 'down:65%:wrap'
-    --bind 'ctrl-q:abort'
-    --color 'pointer:green,marker:green'
-  )
-
-  local pkg_names
-  set +e
-  pkg_names=$(pacman -Qq | fzf "${fzf_args[@]}")
-  local fzf_exit=$?
-  set -e
-
-  if (( fzf_exit != 0 )) || [[ -z $pkg_names ]]; then
-    return
-  fi
-
-  echo "$pkg_names" | tr '\n' ' ' | xargs sudo pacman -Rcs --noconfirm
-  show_done
-}
-
-install_aur_pkg() {
-  show_logo
-  echo "Installing AUR packages..."
-  echo "Press Ctrl+Q to return to menu"
-  echo
-
-  if ! command -v yay &>/dev/null; then
-    echo "Error: yay is not installed"
-    return 1
-  fi
-
-  local fzf_args=(
-    --multi
-    --preview 'yay -Siia {1}'
-    --preview-label='ctrl-q: quit, alt-p: toggle description, alt-b/B: toggle PKGBUILD, alt-j/k: scroll, tab: multi-select'
-    --preview-label-pos='bottom'
-    --preview-window 'down:65%:wrap'
-    --bind 'alt-p:toggle-preview'
-    --bind 'alt-d:preview-half-page-down,alt-u:preview-half-page-up'
-    --bind 'alt-k:preview-up,alt-j:preview-down'
-    --bind 'alt-b:change-preview:yay -Gpa {1} | tail -n +5'
-    --bind 'alt-B:change-preview:yay -Siia {1}'
-    --bind 'ctrl-q:abort'
-    --color 'pointer:green,marker:green'
-  )
-
-  local pkg_names
-  set +e
-  pkg_names=$(yay -Slqa | fzf "${fzf_args[@]}")
-  local fzf_exit=$?
-  set -e
-
-  if (( fzf_exit != 0 )) || [[ -z $pkg_names ]]; then
-    return
-  fi
-
-  sudo -v
-  echo "$pkg_names" | sed 's/^/aur\//' | tr '\n' ' ' | xargs yay -S --noconfirm
-  sudo updatedb
-  show_done
-}
-
-remove_aur_pkg() {
-  show_logo
-  echo "Removing AUR packages..."
-  echo "Press Ctrl+Q to return to menu"
-  echo
-
-  if ! command -v yay &>/dev/null; then
-    echo "Error: yay is not installed"
-    return 1
-  fi
-
-  local fzf_args=(
-    --multi
-    --preview 'yay -Siia {1}'
-    --preview-label='ctrl-q: quit, tab: multi-select'
-    --preview-label-pos='bottom'
-    --preview-window 'down:65%:wrap'
-    --bind 'ctrl-q:abort'
-    --color 'pointer:green,marker:green'
-  )
-
-  local pkg_names
-  set +e
-  pkg_names=$(yay -Qqma | fzf "${fzf_args[@]}")
-  local fzf_exit=$?
-  set -e
-
-  if (( fzf_exit != 0 )) || [[ -z $pkg_names ]]; then
-    return
-  fi
-
-  echo "$pkg_names" | tr '\n' ' ' | xargs yay -Rcs --noconfirm
-  show_done
-}
-
-install_webapp() {
-  show_logo
-  echo "Creating Web App..."
-  echo "Press Ctrl+C to exit"
-  echo
-
-  local icon_dir="$HOME/.local/share/webapps/icons"
-  local app_dir="$HOME/.local/share/webapps"
-  local app_name app_url icon_ref icon_path desktop_file exec_command
-  local exit_code
-
-  app_name=$(gum input --prompt "Name> " --placeholder "My favorite web app")
-  exit_code=$?
-  
-  if ((exit_code != 0)) || [[ -z $app_name ]]; then
-    return
-  fi
-
-  app_url=$(gum input --prompt "URL> " --placeholder "https://example.com")
-  exit_code=$?
-
-  if ((exit_code != 0)) || [[ -z $app_url ]]; then
-    return
-  fi
-
-  if [[ ! $app_url =~ ^[a-zA-Z][a-zA-Z0-9+.-]*: ]]; then
-    app_url="https://$app_url"
-  fi
-
-  mkdir -p "$icon_dir"
-  mkdir -p "$app_dir"
-  export XDG_DATA_DIRS="$HOME/.local/share/webapps:$XDG_DATA_DIRS"
-  local favicon_url="https://www.google.com/s2/favicons?domain=${app_url}&sz=128"
-
-  if curl -fsSL -o "$icon_dir/$app_name.png" "$favicon_url" && [[ -s $icon_dir/$app_name.png ]]; then
-    icon_ref="$app_name.png"
-  else
-    icon_ref=$(gum input --prompt "Icon URL> " --placeholder "Could not fetch favicon automatically. Enter PNG icon URL")
-    exit_code=$?
-    if ((exit_code != 0)) || [[ -z $icon_ref ]]; then
-      return
-    fi
-  fi
-
-  if [[ $icon_ref =~ ^https?:// ]]; then
-    icon_path="$icon_dir/$app_name.png"
-    if ! curl -fsSL -o "$icon_path" "$icon_ref" || [[ ! -s $icon_path ]]; then
-      echo "Error: Failed to download icon"
-      return 1
-    fi
-  else
-    icon_path="$icon_dir/$icon_ref"
-  fi
-
-  exec_command="athos-launch-webapp $app_url"
-
-  desktop_file="$HOME/.local/share/webapps/$app_name.desktop"
-
-  cat >"$desktop_file" <<EOF
-[Desktop Entry]
-Version=1.0
-Name=$app_name
-Comment=$app_name
-Exec=$exec_command
-Terminal=false
-Type=Application
-Icon=$icon_path
-StartupNotify=true
-EOF
-
-  chmod +x "$desktop_file"
-
-  echo
-  echo -e "You can now find $app_name using the app launcher (SUPER + SPACE)"
-  show_done
-  trap - SIGINT
-}
-
-remove_webapp() {
-  show_logo
-  echo "Removing Web App..."
-  echo "Press Ctrl+Q to return to menu"
-  echo
-
-  local app_dir="$HOME/.local/share/webapps"
-  local icon_dir="$HOME/.local/share/webapps/icons"
-
-  local apps
-  apps=$(find "$app_dir" -maxdepth 1 -name "*.desktop" -type f ! -name "athos.desktop" 2>/dev/null | xargs -I{} basename {} .desktop | sort)
-
-  if [[ -z $apps ]]; then
-    echo "No web apps found."
-    show_done
-    return
-  fi
-
-  local selected
-  set +e
-  selected=$(echo "$apps" | fzf --multi --preview "cat $app_dir/{1}.desktop" --preview-label='ctrl-q: quit, tab: multi-select' --bind 'ctrl-q:abort' --color 'pointer:green,marker:green')
-  local fzf_exit=$?
-  set -e
-
-  if (( fzf_exit != 0 )) || [[ -z $selected ]]; then
-    return
-  fi
-
-  while IFS= read -r app; do
-    rm -f "$app_dir/$app.desktop"
-    rm -f "$icon_dir/$app.png"
-    echo "Removed $app"
-  done <<< "$selected"
-
-  show_done
-}
+check_deps "gum" "fzf"
 
 show_main_menu() {
   show_logo
@@ -312,22 +25,22 @@ show_main_menu() {
 
   case "$choice" in
     *"Install Arch Package")
-      install_arch_pkg
+      athos-pkg-install
       ;;
     *"Install AUR Package")
-      install_aur_pkg
+      athos-pkg-aur-install
       ;;
     *"Install Web App")
-      install_webapp
+      athos-webapp-install
       ;;
     *"Remove Arch Package")
-      remove_arch_pkg
+      athos-pkg-remove
       ;;
     *"Remove AUR Package")
-      remove_aur_pkg
+      athos-pkg-aur-remove
       ;;
     *"Remove Web App")
-      remove_webapp
+      athos-webapp-remove
       ;;
     *"Quit"|"")
       show_logo

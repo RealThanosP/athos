@@ -1,20 +1,37 @@
-#!/bin/bash
+#!/usr/bin/env bash
+
+set -e
+
+SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+source "$SCRIPT_DIR/athos-utils.sh"
+
+check_deps "gum" "fzf" "pacman"
+
+show_logo
+echo "Installing Arch packages..."
+echo
+echo "Press Ctrl+Q to return to menu"
+echo
 
 fzf_args=(
   --multi
   --preview 'pacman -Sii {1}'
-  --preview-label='alt-p: toggle description, alt-j/k: scroll, tab: multi-select'
+  --preview-label='ctrl-q: quit, alt-p: toggle description, alt-j/k: scroll, tab: multi-select'
   --preview-label-pos='bottom'
   --preview-window 'down:65%:wrap'
   --bind 'alt-p:toggle-preview'
   --bind 'alt-d:preview-half-page-down,alt-u:preview-half-page-up'
   --bind 'alt-k:preview-up,alt-j:preview-down'
+  --bind 'ctrl-q:abort'
   --color 'pointer:green,marker:green'
 )
 
 pkg_names=$(pacman -Slq | fzf "${fzf_args[@]}")
 
-if [[ -n $pkg_names ]]; then
-  echo "$pkg_names" | tr '\n' ' ' | xargs sudo pacman -S --noconfirm
-  athos-show-done
+if [[ -z "$pkg_names" ]]; then
+  exit 0
 fi
+
+echo "$pkg_names" | tr '\n' ' ' | xargs sudo pacman -S --noconfirm
+
+show_done
