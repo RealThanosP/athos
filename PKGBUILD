@@ -31,10 +31,6 @@ md5sums=('SKIP'
          'SKIP'
          'SKIP')
 
-<<<<<<< HEAD
-prepare() {
-    cat > "athos.desktop" <<EOF
-=======
 package() {
     cd "$pkgname"
     
@@ -56,7 +52,6 @@ package() {
     
     mkdir -p "$pkgdir/usr/share/applications"
     cat > "$pkgdir/usr/share/applications/athos.desktop" <<EOF
->>>>>>> refs/remotes/origin/main
 [Desktop Entry]
 Version=1.0
 Name=athos
@@ -70,7 +65,6 @@ Keywords=install;package;aur;webapp;
 EOF
 }
 
-<<<<<<< HEAD
 package() {
     install -Dm755 athos "$pkgdir/usr/bin/athos"
     install -Dm755 athos-pkg-install "$pkgdir/usr/bin/athos-pkg-install"
@@ -86,18 +80,4 @@ package() {
     install -Dm644 icon.png "$pkgdir/usr/share/icons/hicolor/256x256/apps/athos.png"
     
     install -Dm644 athos.desktop "$pkgdir/usr/share/applications/athos.desktop"
-=======
-post_install() {
-    echo ""
-    echo "========================================"
-    echo "  athos installed successfully!"
-    echo "========================================"
-    echo ""
-    echo "Run the following command to complete setup:"
-    echo ""
-    echo "  athos-install"
-    echo ""
-    echo "This will create desktop entry and add PATH to your shell."
-    echo ""
->>>>>>> refs/remotes/origin/main
 }
